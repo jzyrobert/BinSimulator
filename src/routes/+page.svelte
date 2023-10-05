@@ -1,2 +1,22 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<div id="outer">
+    <div id="inner">
+    <!-- svelte-ignore a11y-media-has-caption -->
+    <video autoplay={true} controls={false} loop={true} src="star_brown.mp4"></video>
+</div>
+<div id="inner">
+    <!-- svelte-ignore a11y-media-has-caption -->
+    <video autoplay={true} controls={false} loop={true} src="prompt.mp4"></video>
+</div>
+</div>
+
+<style>
+    #outer {
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+    }
+    #inner {
+        display: flex;
+        justify-content: center;
+    }
+</style>
