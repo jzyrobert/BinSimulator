@@ -1,9 +1,16 @@
 <div id="outer">
     <div id="inner">
     <!-- svelte-ignore a11y-media-has-caption -->
-    <video autoplay={true} muted={true} controls={false} loop={true} src="Background_1.mp4"></video>
+    <video on:click={() => showText()} autoplay={true} muted={true} controls={false} loop={true} src="Background_1.mp4"></video>
 </div>
 </div>
+
+<script lang="ts">
+    function showText() {
+
+    }
+
+</script>
 
 <style>
     #outer {
