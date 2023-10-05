@@ -24,4 +24,8 @@
         align-content: center;
         justify-content: center;
     }
+
+    video {
+        width: 100%;
+    }
 </style>
