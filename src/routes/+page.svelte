@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { TRASHCAN_DIALOGUES, VOICE_LINES } from '$lib/dialogue';
 	import { fade } from 'svelte/transition';
+	import { base } from '$app/paths'
 
 	function playClick() {
 		if (!audioPlaying) {
@@ -96,7 +97,7 @@
 	<audio id="click" src="click_fast.mp3" />
 	<div id="voicelines">
 		{#each VOICE_LINES as voiceLine, index (voiceLine)}
-		<audio bind:paused={voicelinePaused[index]} src={'/voices/' + voiceLine + '.mp3'}></audio>
+		<audio bind:paused={voicelinePaused[index]} src={base + '/voices/' + voiceLine + '.mp3'}></audio>
 		{/each}
 	</div>
 </div>
