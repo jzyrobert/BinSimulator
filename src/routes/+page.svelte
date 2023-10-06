@@ -1,31 +1,119 @@
-<div id="outer">
-    <div id="inner">
-    <!-- svelte-ignore a11y-media-has-caption -->
-    <video on:click={() => showText()} autoplay={true} muted={true} controls={false} loop={true} src="Background_1.mp4"></video>
-</div>
-</div>
-
 <script lang="ts">
-    function showText() {
+	import { TRASHCAN_DIALOGUES } from '$lib/dialogue';
+	import { onMount } from 'svelte';
+	import { fade } from 'svelte/transition';
+	onMount(() => {
+		const audioElement = document.getElementById('ember');
+		if (audioElement instanceof HTMLAudioElement) {
+			audioElement.volume = 0.2;
+			audioElement.play();
+		}
+	});
 
+    function playClick() {
+        const audioElement = document.getElementById('click');
+		if (audioElement instanceof HTMLAudioElement) {
+			audioElement.play();
+		}
     }
 
+    function typeWrite(node: HTMLElement) {
+        const speed = 3;
+        const valid = node.childNodes.length === 1 && node.childNodes[0].nodeType === Node.TEXT_NODE;
+
+		if (!valid) {
+			throw new Error(`This transition only works on elements with a single text node child`);
+		}
+
+		const text = node.textContent!!;
+        console.log(text)
+		const duration = text.length / (speed * 0.01);
+
+		return {
+			duration,
+			tick: (t: number) => {
+				const i = Math.trunc(text.length * t);
+				node.textContent = text.slice(0, i);
+			}
+		};
+    }
+
+	function showText() {
+		playClick()
+		const entry = TRASHCAN_DIALOGUES[Math.floor(Math.random() * TRASHCAN_DIALOGUES.length)];
+		if (typeof entry === 'string') {
+            textEntry = entry
+            showVideo = false
+		} else {
+			// Special
+		}
+	}
+
+    function backToVideo() {
+        playClick()
+        showVideo = true
+    }
+
+    let showVideo = true
+    let textEntry = ""
 </script>
 
+<div id="outer">
+		<!-- svelte-ignore a11y-media-has-caption -->
+        {#if showVideo}
+		<video
+			in:fade
+            out:fade
+			on:click={() => showText()}
+			autoplay
+			muted
+			controls={false}
+			loop
+			src="Background_1.mp4"
+		/>
+        {:else}
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <div out:fade on:click={() => backToVideo()} id="textblock">
+            <div in:typeWrite id="bintext">{ textEntry }</div>
+        </div>
+        {/if}
+	<audio id="ember" src="Embers.mp3" loop />
+	<audio id="click" src="click_fast.mp3" />
+</div>
+
 <style>
-    #outer {
+    @font-face {
+        font-family: din_bold;
+        src: url(din_bold.otf);
+    }
+	#outer {
+		height: 100%;
+		flex-direction: column;
+	}
+    #textblock {
         height: 100%;
         display: flex;
-        justify-content: center;
-        flex-direction: column;
+        flex-wrap: wrap;
+        align-content: center;
+		justify-content: center;
+        flex-direction: column;;
+        background-color: black;
     }
-    #inner {
+    #bintext {
+        display: flex;
+        width: 80%;
+        flex-wrap: wrap;
+        align-content: center;
+		justify-content: center;
+        color: white;
+        font-size: 30pt;
+        font-family: din_bold;
+    }
+	video {
+		width: 100%;
         display: flex;
         align-content: center;
-        justify-content: center;
-    }
-
-    video {
-        width: 100%;
-    }
+		justify-content: center;
+	}
 </style>
