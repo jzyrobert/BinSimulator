@@ -2,15 +2,16 @@
 	import { TRASHCAN_DIALOGUES } from '$lib/dialogue';
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
-	onMount(() => {
-		const audioElement = document.getElementById('ember');
-		if (audioElement instanceof HTMLAudioElement) {
-			audioElement.volume = 0.2;
-			audioElement.play();
-		}
-	});
 
 	function playClick() {
+		if (!audioPlaying) {
+			const audioElement = document.getElementById('ember');
+			if (audioElement instanceof HTMLAudioElement) {
+				audioElement.volume = 0.2;
+				audioElement.play();
+				audioPlaying = true;
+			}
+		}
 		const audioElement = document.getElementById('click');
 		if (audioElement instanceof HTMLAudioElement) {
 			audioElement.play();
@@ -55,6 +56,7 @@
 
 	let showVideo = true;
 	let textEntry = '';
+	let audioPlaying = false;
 </script>
 
 <div id="outer">
