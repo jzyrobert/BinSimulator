@@ -49,7 +49,7 @@
 	}
 
 	function backToVideo() {
-		if (!voicelinePaused) {
+		if (voicelinePaused.some(b => !b)) {
 			// Wait for voice line to finish
 			return
 		}
@@ -58,11 +58,10 @@
 	}
 
 	function playVoiceline() {
-		const play = Math.random() <= 0.3 // 30% chance
+		const play = Math.random() <= 1 // 30% chance
 		if (play) {
-			const entry = VOICE_LINES[Math.floor(Math.random() * VOICE_LINES.length)];
-			const voiceNode = document.getElementById('voiceline')!! as HTMLAudioElement
-			voiceNode.src = '/voices/' + entry + '.mp3'
+			const index = Math.floor(Math.random() * VOICE_LINES.length);
+			const voiceNode = document.getElementById('voicelines')!!.children[index] as HTMLAudioElement
 			voiceNode.play()
 		}
 	}
@@ -70,7 +69,7 @@
 	let showVideo = true;
 	let textEntry = '';
 	let audioPlaying = false;
-	let voicelinePaused = true;
+	let voicelinePaused: boolean[] = Array(VOICE_LINES.length).fill(true)
 </script>
 
 <div id="outer">
@@ -95,7 +94,11 @@
 	{/if}
 	<audio id="ember" src="Embers.mp3" loop />
 	<audio id="click" src="click_fast.mp3" />
-	<audio bind:paused={voicelinePaused} id="voiceline"></audio>
+	<div id="voicelines">
+		{#each VOICE_LINES as voiceLine, index (voiceLine)}
+		<audio bind:paused={voicelinePaused[index]} src={'/voices/' + voiceLine + '.mp3'}></audio>
+		{/each}
+	</div>
 </div>
 
 <style>
