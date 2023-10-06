@@ -19,3 +19,13 @@ export const TRASHCAN_DIALOGUES: (string | string[])[] = [
     "A nice-looking trash can, but that's all it really is: a trash can.",
     "An overwhelmingly fishy smell emanates from the trash can as you remove the lid. Instead of fish, you find only a fish-related flyer. Is this how synesthesia works?"
 ]
+
+export const VOICE_LINES: string[] = [
+    "clara_interesting",
+    "dan_look",
+    "dan_time",
+    "march_better",
+    "march_business",
+    "march_stop_talking",
+    "march_why",
+]

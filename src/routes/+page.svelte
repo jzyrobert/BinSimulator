@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { TRASHCAN_DIALOGUES } from '$lib/dialogue';
-	import { onMount } from 'svelte';
+	import { TRASHCAN_DIALOGUES, VOICE_LINES } from '$lib/dialogue';
 	import { fade } from 'svelte/transition';
 
 	function playClick() {
@@ -50,13 +49,28 @@
 	}
 
 	function backToVideo() {
+		if (!voicelinePaused) {
+			// Wait for voice line to finish
+			return
+		}
 		playClick();
 		showVideo = true;
+	}
+
+	function playVoiceline() {
+		const play = Math.random() <= 0.3 // 30% chance
+		if (play) {
+			const entry = VOICE_LINES[Math.floor(Math.random() * VOICE_LINES.length)];
+			const voiceNode = document.getElementById('voiceline')!! as HTMLAudioElement
+			voiceNode.src = '/voices/' + entry + '.mp3'
+			voiceNode.play()
+		}
 	}
 
 	let showVideo = true;
 	let textEntry = '';
 	let audioPlaying = false;
+	let voicelinePaused = true;
 </script>
 
 <div id="outer">
@@ -76,11 +90,12 @@
 		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
 		<div out:fade on:click={() => backToVideo()} id="textblock">
-			<div in:typeWrite id="bintext">{textEntry}</div>
+			<div in:typeWrite on:introend={() => playVoiceline()} id="bintext">{textEntry}</div>
 		</div>
 	{/if}
 	<audio id="ember" src="Embers.mp3" loop />
 	<audio id="click" src="click_fast.mp3" />
+	<audio bind:paused={voicelinePaused} id="voiceline"></audio>
 </div>
 
 <style>
