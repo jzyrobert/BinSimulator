@@ -40,13 +40,18 @@
 
 	function showText() {
 		playClick();
-		const entry = TRASHCAN_DIALOGUES[Math.floor(Math.random() * TRASHCAN_DIALOGUES.length)];
+		let index = Math.floor(Math.random() * TRASHCAN_DIALOGUES.length);
+		while (lastTextIndex == index) {
+			index = Math.floor(Math.random() * TRASHCAN_DIALOGUES.length);
+		}
+		lastTextIndex = index
+		const entry = TRASHCAN_DIALOGUES[index];
 		if (typeof entry === 'string') {
 			textEntry = entry;
-			showVideo = false;
 		} else {
-			// Special
+			textEntry = '\n'.concat(...entry)
 		}
+		showVideo = false;
 	}
 
 	function backToVideo() {
@@ -59,17 +64,23 @@
 	}
 
 	function playVoiceline() {
-		const play = Math.random() <= 1 // 30% chance
+		const play = Math.random() <= 0.3 // 30% chance
 		if (play) {
-			const index = Math.floor(Math.random() * VOICE_LINES.length);
+			let index = Math.floor(Math.random() * VOICE_LINES.length);
+			while (lastVoicelineIndex == index) {
+				index = Math.floor(Math.random() * VOICE_LINES.length);
+			}
+			lastTextIndex = index
 			const voiceNode = document.getElementById('voicelines')!!.children[index] as HTMLAudioElement
 			voiceNode.play()
 		}
 	}
 
 	let showVideo = true;
+	let lastTextIndex = -1;
 	let textEntry = '';
 	let audioPlaying = false;
+	let lastVoicelineIndex = -1;
 	let voicelinePaused: boolean[] = Array(VOICE_LINES.length).fill(true)
 </script>
 
