@@ -28,4 +28,7 @@ export const VOICE_LINES: string[] = [
     "march_business",
     "march_stop_talking",
     "march_why",
+    "kafka_hiding2",
+    "pompom_excited",
+    "pompom_more",
 ]
