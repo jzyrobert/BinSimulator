@@ -207,8 +207,8 @@
 	}
 	#outer {
 		height: 100%;
-		display: flex;
-		justify-content: center;
+		/* display: flex; */
+		/* justify-content: center; */
 	}
 	#textblock {
 		display: flex;
@@ -228,7 +228,7 @@
 		align-content: center;
 		justify-content: center;
 		color: white;
-		font-size: 40pt;
+		font-size: 4.5vmin;
 		font-family: din_bold;
 	}
 	#dialogueBox {
@@ -249,7 +249,7 @@
 		align-content: center;
 		justify-content: center;
 		color: white;
-		font-size: 25pt;
+		font-size: 3vmin;
 		font-family: din_bold;
 	}
 	#character {
@@ -261,5 +261,6 @@
 	video {
 		height: 120%;
 		width: 140%;
+		transform: translate(-15%);
 	}
 </style>
