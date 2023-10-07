@@ -6,7 +6,7 @@
 
 	function playClick() {
 		if (backgroundAudio != null && !backgroundPlaying) {
-			backgroundAudio.volume = 0.2;
+			backgroundAudio.volume = 0.15;
 			backgroundAudio.play();
 			backgroundPlaying = true;
 		}
@@ -257,6 +257,8 @@
 		scale: 80%;
 	}
 	video {
+		max-height: 100%;
+		overflow: hidden;
 		width: 100%;
 		display: flex;
 		align-content: center;
