@@ -25,8 +25,10 @@
 
 		const text = node.textContent!!;
 		const duration = textDuration * 1000;
+		const delay = node.id == "bintext" ? 0 : dialogueDelay * 1000;
 
 		return {
+			delay,
 			duration,
 			tick: (t: number) => {
 				const i = Math.trunc(text.length * t);
@@ -36,7 +38,6 @@
 	}
 
 	function showText() {
-		playClick();
 		let index = Math.floor(Math.random() * TRASHCAN_DIALOGUES.length);
 		while (index == lastTextChoice) {
 			index = Math.floor(Math.random() * TRASHCAN_DIALOGUES.length);
@@ -51,19 +52,22 @@
 			totalVoiceDialogue = entry;
 			currentTextIndex = 0;
 		}
-		textDuration = Math.min(totalVoiceDialogue[0].length / 50, 3);
+		textDuration = Math.min(totalVoiceDialogue[0].length / textSpeed, textDurationLimit);
 		showVideo = false;
 	}
 
 	const forceUpdate = async (_: boolean) => {};
 
 	function handleTextClick() {
-		console.log("Handling click...")
-		ready = !ready
+		// Let dialogue finish playing
+		if (introRunning) {
+			return;
+		}
 		if (totalVoiceDialogue.length && currentTextIndex < totalVoiceDialogue.length - 1) {
 			// Continue dialogue
 			currentTextIndex += 1;
-			textDuration = Math.min(totalVoiceDialogue[currentTextIndex].length / 50, 3);
+			textDuration = Math.min(totalVoiceDialogue[currentTextIndex].length / textSpeed, textDurationLimit);
+			ready = !ready
 		} else {
 			backToVideo();
 		}
@@ -74,7 +78,6 @@
 			// Wait for voice line to finish
 			return;
 		}
-		playClick();
 		showDialogue = false;
 		showVideo = true;
 	}
@@ -108,7 +111,8 @@
 				dialogueObj = VOICE_LINE_DIALOGUES[index];
 			}
 			const voiceNode = document.getElementById('voicelines')!!.children[index] as HTMLAudioElement;
-			textDuration = voiceNode.duration;
+			dialogueDelay = dialogueObj.delay ?? 0;
+			textDuration = voiceNode.duration - dialogueDelay;
 
 			dialogueIcon = base + '/images/' + dialogueObj.icon;
 			voiceDialogue = dialogueObj.line;
@@ -123,6 +127,7 @@
 	let voicelinePlaying = false;
 	let showDialogue = false;
 	let ready = false;
+	let introRunning = false;
 
 	let voiceDialogue = '';
 	let dialogueIcon = '';
@@ -135,6 +140,9 @@
 	let lastVoicelineChoice = -1;
 	let textDuration = 0;
 	let voiceChance = 0.4; // 40%
+	let textSpeed = 70; // Duration = Length of text divided by this number, limited to textDurationLimit (seconds)
+	let textDurationLimit = 2;
+	let dialogueDelay = 3; // If voiceline starts with e.g. laughing
 
 	let backgroundAudio: HTMLAudioElement;
 	let clickAudio: HTMLAudioElement;
@@ -153,7 +161,7 @@
 		<video
 			in:fade
 			out:fade
-			on:click={() => showText()}
+			on:click={() => {playClick(); showText()}}
 			autoplay
 			muted
 			controls={false}
@@ -163,9 +171,9 @@
 	{:else}
 		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div in:fade out:fade on:click={() => {handleTextClick()}} id="textblock">
+		<div in:fade out:fade on:click={() => {playClick(); handleTextClick()}} id="textblock">
 			{#await forceUpdate(ready) then _}
-			<div in:typeWrite on:introend={() => playVoiceline()} id="bintext">
+			<div in:typeWrite on:introstart={() => introRunning = true} on:introend={() => {introRunning = false; playVoiceline()}} id="bintext">
 				{totalVoiceDialogue.length > 0 && currentTextIndex < totalVoiceDialogue.length
 					? totalVoiceDialogue[currentTextIndex]
 					: ''}
@@ -218,7 +226,7 @@
 		align-content: center;
 		justify-content: center;
 		color: white;
-		font-size: 30pt;
+		font-size: 40pt;
 		font-family: din_bold;
 	}
 	#dialogueBox {
@@ -239,7 +247,7 @@
 		align-content: center;
 		justify-content: center;
 		color: white;
-		font-size: 20pt;
+		font-size: 25pt;
 		font-family: din_bold;
 	}
 	#character {

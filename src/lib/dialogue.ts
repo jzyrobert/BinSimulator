@@ -24,7 +24,8 @@ export const TRASHCAN_DIALOGUES: (string | string[])[] = [
 export type AudioLine = {
     line: string,
     audio: string,
-    icon: string
+    icon: string,
+    delay?: number
 }
 
 export const VOICE_LINE_DIALOGUES: AudioLine[] = [
@@ -45,6 +46,7 @@ export const VOICE_LINE_DIALOGUES: AudioLine[] = [
     },
     {
         line: "Are you kidding? You won't find me hiding in there.",
+        delay: 1,
         audio: "kafka_hiding2",
         icon: "kafka.webp"
     },
