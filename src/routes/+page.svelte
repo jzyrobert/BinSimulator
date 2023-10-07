@@ -207,11 +207,13 @@
 	}
 	#outer {
 		height: 100%;
-		flex-direction: column;
+		display: flex;
+		justify-content: center;
 	}
 	#textblock {
 		display: flex;
 		height: 100%;
+		width: 100%;
 		flex-wrap: wrap;
 		align-content: center;
 		justify-content: center;
@@ -257,11 +259,7 @@
 		scale: 80%;
 	}
 	video {
-		max-height: 100%;
-		overflow: hidden;
-		width: 100%;
-		display: flex;
-		align-content: center;
-		justify-content: center;
+		height: 120%;
+		width: 140%;
 	}
 </style>
