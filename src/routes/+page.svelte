@@ -261,6 +261,7 @@
 	video {
 		height: 120%;
 		width: 140%;
+		overflow: hidden;
 		transform: translate(-15%);
 	}
 </style>
