@@ -1,28 +1,22 @@
 <script lang="ts">
-	import {
-		TRASHCAN_DIALOGUES,
-		VOICE_LINES,
-		VOICE_LINE_DIAGLOGUES as VOICE_LINE_DIALOGUES
-	} from '$lib/dialogue';
+	import { TRASHCAN_DIALOGUES, VOICE_LINE_DIALOGUES, ENDING_DIALOGUES } from '$lib/dialogue';
+	import type { AudioLine } from '$lib/dialogue';
 	import { fade } from 'svelte/transition';
 	import { base } from '$app/paths';
 
 	function playClick() {
-		if (!audioPlaying) {
-			const audioElement = document.getElementById('ember');
-			if (audioElement instanceof HTMLAudioElement) {
-				audioElement.volume = 0.2;
-				audioElement.play();
-				audioPlaying = true;
-			}
+		if (backgroundAudio != null && !backgroundPlaying) {
+			backgroundAudio.volume = 0.2;
+			backgroundAudio.play();
+			backgroundPlaying = true;
 		}
-		const audioElement = document.getElementById('click');
-		if (audioElement instanceof HTMLAudioElement) {
-			audioElement.play();
+		if (clickAudio != null) {
+			clickAudio.play();
 		}
 	}
 
 	function typeWrite(node: HTMLElement) {
+		console.log('Triggering typing...');
 		const valid = node.childNodes.length === 1 && node.childNodes[0].nodeType === Node.TEXT_NODE;
 
 		if (!valid) {
@@ -32,7 +26,6 @@
 		const text = node.textContent!!;
 		const duration = textDuration * 1000;
 
-		console.log(`duration is ${duration}`)
 		return {
 			duration,
 			tick: (t: number) => {
@@ -45,22 +38,39 @@
 	function showText() {
 		playClick();
 		let index = Math.floor(Math.random() * TRASHCAN_DIALOGUES.length);
-		while (index == lastTextIndex) {
+		while (index == lastTextChoice) {
 			index = Math.floor(Math.random() * TRASHCAN_DIALOGUES.length);
 		}
-		lastTextIndex = index;
+		lastTextChoice = index;
 		const entry = TRASHCAN_DIALOGUES[index];
 		if (typeof entry === 'string') {
-			textEntry = entry;
+			totalVoiceDialogue = [entry];
+			currentTextIndex = 0;
 		} else {
-			textEntry = '\n'.concat(...entry);
+			// trigger special case
+			totalVoiceDialogue = entry;
+			currentTextIndex = 0;
 		}
-		textDuration = Math.min(textEntry.length / 50, 3);
+		textDuration = Math.min(totalVoiceDialogue[0].length / 50, 3);
 		showVideo = false;
 	}
 
+	const forceUpdate = async (_: boolean) => {};
+
+	function handleTextClick() {
+		console.log("Handling click...")
+		ready = !ready
+		if (totalVoiceDialogue.length && currentTextIndex < totalVoiceDialogue.length - 1) {
+			// Continue dialogue
+			currentTextIndex += 1;
+			textDuration = Math.min(totalVoiceDialogue[currentTextIndex].length / 50, 3);
+		} else {
+			backToVideo();
+		}
+	}
+
 	function backToVideo() {
-		if (voicelinePaused.some((b) => !b)) {
+		if (voicelinePlaying) {
 			// Wait for voice line to finish
 			return;
 		}
@@ -70,17 +80,35 @@
 	}
 
 	function playVoiceline() {
-		const play = Math.random() <= 0.3; // 30% chance
+		// In multiline text, only play during last box
+		if (isMultiLine && !isLastEntry) {
+			return;
+		}
+		// Always play the multiline ending dialogue
+		const play = isMultiLine ? true : Math.random() <= voiceChance;
 		if (play) {
-			let index = Math.floor(Math.random() * VOICE_LINES.length);
-			while (index == lastVoicelineIndex) {
-				index = Math.floor(Math.random() * VOICE_LINES.length);
+			let index: number;
+			let dialogueObj: AudioLine;
+			if (isMultiLine) {
+				// Alternate here
+				index = Math.floor(Math.random() * ENDING_DIALOGUES.length);
+				while (index == lastEndingChoice) {
+					index = Math.floor(Math.random() * ENDING_DIALOGUES.length);
+				}
+				lastEndingChoice = index
+				dialogueObj = ENDING_DIALOGUES[index];
+				// Append the remaining length to get the actual index
+				index += VOICE_LINE_DIALOGUES.length;
+			} else {
+				index = Math.floor(Math.random() * VOICE_LINE_DIALOGUES.length);
+				while (index == lastVoicelineChoice) {
+					index = Math.floor(Math.random() * VOICE_LINE_DIALOGUES.length);
+				}
+				lastVoicelineChoice = index;
+				dialogueObj = VOICE_LINE_DIALOGUES[index];
 			}
-			lastVoicelineIndex = index;
 			const voiceNode = document.getElementById('voicelines')!!.children[index] as HTMLAudioElement;
-			const dialogueObj = VOICE_LINE_DIALOGUES[index];
-			console.log(voiceNode.duration)
-			textDuration = voiceNode.duration
+			textDuration = voiceNode.duration;
 
 			dialogueIcon = base + '/images/' + dialogueObj.icon;
 			voiceDialogue = dialogueObj.line;
@@ -91,18 +119,32 @@
 	}
 
 	let showVideo = true;
-	let audioPlaying = false;
+	let backgroundPlaying = false;
+	let voicelinePlaying = false;
 	let showDialogue = false;
+	let ready = false;
 
-	let textEntry = '';
 	let voiceDialogue = '';
 	let dialogueIcon = '';
 
-	let textDuration = 0;
-	let lastTextIndex = -1;
-	let lastVoicelineIndex = -1;
+	let totalVoiceDialogue: string[] = ['Placeholder'];
 
-	let voicelinePaused: boolean[] = Array(VOICE_LINES.length).fill(true);
+	let currentTextIndex = 0;
+	let lastTextChoice = -1;
+	let lastEndingChoice = -1;
+	let lastVoicelineChoice = -1;
+	let textDuration = 0;
+	let voiceChance = 0.4; // 40%
+
+	let backgroundAudio: HTMLAudioElement;
+	let clickAudio: HTMLAudioElement;
+
+	$: combinedVoiceLines = [
+		...VOICE_LINE_DIALOGUES.map((d) => d.audio),
+		...ENDING_DIALOGUES.map((d) => d.audio)
+	];
+	$: isMultiLine = totalVoiceDialogue.length > 1;
+	$: isLastEntry = currentTextIndex == totalVoiceDialogue.length - 1;
 </script>
 
 <div id="outer">
@@ -121,21 +163,31 @@
 	{:else}
 		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div out:fade on:click={() => backToVideo()} id="textblock">
-			<div in:typeWrite on:introend={() => playVoiceline()} id="bintext">{textEntry}</div>
+		<div in:fade out:fade on:click={() => {handleTextClick()}} id="textblock">
+			{#await forceUpdate(ready) then _}
+			<div in:typeWrite on:introend={() => playVoiceline()} id="bintext">
+				{totalVoiceDialogue.length > 0 && currentTextIndex < totalVoiceDialogue.length
+					? totalVoiceDialogue[currentTextIndex]
+					: ''}
+			</div>
+			{/await}
 			<div class:show={showDialogue} id="dialogueBox">
 				{#if showDialogue}
-				<img id="character" src={dialogueIcon} alt="Character icon" />
-				<div id="dialogue" in:typeWrite>{voiceDialogue}</div>
+					<img id="character" src={dialogueIcon} alt="Character icon" />
+					<div id="dialogue" in:typeWrite>{voiceDialogue}</div>
 				{/if}
 			</div>
 		</div>
 	{/if}
-	<audio id="ember" src="Embers.mp3" loop />
-	<audio id="click" src="click_fast.mp3" />
+	<audio bind:this={backgroundAudio} id="ember" src="Embers.mp3" loop />
+	<audio bind:this={clickAudio} id="click" src="click_fast.mp3" />
 	<div id="voicelines">
-		{#each VOICE_LINES as voiceLine, index (voiceLine)}
-			<audio bind:paused={voicelinePaused[index]} src={base + '/voices/' + voiceLine + '.mp3'} />
+		{#each combinedVoiceLines as voiceLine}
+			<audio
+				on:play={() => (voicelinePlaying = true)}
+				on:ended={() => (voicelinePlaying = false)}
+				src={base + '/voices/' + voiceLine + '.mp3'}
+			/>
 		{/each}
 	</div>
 </div>
