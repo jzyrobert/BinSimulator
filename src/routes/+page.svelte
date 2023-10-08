@@ -25,7 +25,7 @@
 
 		const text = node.textContent!!;
 		const duration = textDuration * 1000;
-		const delay = node.id == "bintext" ? 0 : dialogueDelay * 1000;
+		const delay = node.id == 'bintext' ? 0 : dialogueDelay * 1000;
 
 		return {
 			delay,
@@ -43,6 +43,7 @@
 			index = Math.floor(Math.random() * TRASHCAN_DIALOGUES.length);
 		}
 		lastTextChoice = index;
+		index = 0;
 		const entry = TRASHCAN_DIALOGUES[index];
 		if (typeof entry === 'string') {
 			totalVoiceDialogue = [entry];
@@ -60,14 +61,18 @@
 
 	function handleTextClick() {
 		// Let dialogue finish playing
-		if (introRunning) {
+		if (introRunning || showAchievement) {
 			return;
 		}
 		if (totalVoiceDialogue.length && currentTextIndex < totalVoiceDialogue.length - 1) {
 			// Continue dialogue
 			currentTextIndex += 1;
-			textDuration = Math.min(totalVoiceDialogue[currentTextIndex].length / textSpeed, textDurationLimit);
-			ready = !ready
+			textDuration = Math.min(
+				totalVoiceDialogue[currentTextIndex].length / textSpeed,
+				textDurationLimit
+			);
+
+			ready = !ready;
 		} else {
 			backToVideo();
 		}
@@ -98,7 +103,7 @@
 				while (index == lastEndingChoice) {
 					index = Math.floor(Math.random() * ENDING_DIALOGUES.length);
 				}
-				lastEndingChoice = index
+				lastEndingChoice = index;
 				dialogueObj = ENDING_DIALOGUES[index];
 				// Append the remaining length to get the actual index
 				index += VOICE_LINE_DIALOGUES.length;
@@ -128,6 +133,7 @@
 	let showDialogue = false;
 	let ready = false;
 	let introRunning = false;
+	let showAchievement = false;
 
 	let voiceDialogue = '';
 	let dialogueIcon = '';
@@ -146,6 +152,7 @@
 
 	let backgroundAudio: HTMLAudioElement;
 	let clickAudio: HTMLAudioElement;
+	let achieveAudio: HTMLAudioElement;
 
 	$: combinedVoiceLines = [
 		...VOICE_LINE_DIALOGUES.map((d) => d.audio),
@@ -161,7 +168,10 @@
 		<video
 			in:fade
 			out:fade
-			on:click={() => {playClick(); showText()}}
+			on:click={() => {
+				playClick();
+				showText();
+			}}
 			autoplay
 			muted
 			controls={false}
@@ -171,23 +181,72 @@
 	{:else}
 		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div in:fade out:fade on:click={() => {playClick(); handleTextClick()}} id="textblock">
+		<div
+			in:fade
+			out:fade
+			on:click={() => {
+				playClick();
+				handleTextClick();
+			}}
+			id="textblock"
+		>
 			{#await forceUpdate(ready) then _}
-			<div in:typeWrite on:introstart={() => introRunning = true} on:introend={() => {introRunning = false; playVoiceline()}} id="bintext">
-				{totalVoiceDialogue.length > 0 && currentTextIndex < totalVoiceDialogue.length
-					? totalVoiceDialogue[currentTextIndex]
-					: ''}
-			</div>
+				<div
+					in:typeWrite
+					on:introstart={() => (introRunning = true)}
+					on:introend={() => {
+						introRunning = false;
+						if (currentTextIndex == totalVoiceDialogue.length - 2) {
+							showAchievement = true;
+						}
+						playVoiceline();
+					}}
+					id="bintext"
+				>
+					{totalVoiceDialogue.length > 0 && currentTextIndex < totalVoiceDialogue.length
+						? totalVoiceDialogue[currentTextIndex]
+						: ''}
+				</div>
 			{/await}
-			<div class:show={showDialogue} id="dialogueBox">
+			<div id="dialogueContainer">
 				{#if showDialogue}
-					<img id="character" src={dialogueIcon} alt="Character icon" />
-					<div id="dialogue" in:typeWrite>{voiceDialogue}</div>
+					<div id="dialogueBox">
+						<img id="character" src={dialogueIcon} alt="Character icon" />
+						<div id="dialogue" in:typeWrite>{voiceDialogue}</div>
+					</div>
+				{/if}
+				{#if showAchievement}
+					<div
+						in:fade={{ duration: 500 }}
+						out:fade={{ delay: 1000, duration: 1000 }}
+						class="show"
+						id="dialogueBox"
+					>
+						<img
+							on:introstart={() => achieveAudio.play()}
+							in:fade={{ duration: 500 }}
+							out:fade={{ delay: 1000, duration: 1000 }}
+							on:introend={() => {
+								showAchievement = false;
+							}}
+							id="praise"
+							src={base + '/images/praise.webp'}
+							alt="Praise of High morals"
+						/>
+						<div
+							id="dialogue"
+							in:fade={{ duration: 500 }}
+							out:fade={{ delay: 1000, duration: 1000 }}
+						>
+							Obtained 1x Praise of High morals
+						</div>
+					</div>
 				{/if}
 			</div>
 		</div>
 	{/if}
 	<audio bind:this={backgroundAudio} id="ember" src="Embers.mp3" loop />
+	<audio bind:this={achieveAudio} id="achieve" src="achieve.mp3" />
 	<audio bind:this={clickAudio} id="click" src="click_fast.mp3" />
 	<div id="voicelines">
 		{#each combinedVoiceLines as voiceLine}
@@ -231,7 +290,7 @@
 		font-size: 4.5vmin;
 		font-family: din_bold;
 	}
-	#dialogueBox {
+	#dialogueContainer {
 		display: flex;
 		width: 50%;
 		height: 15%;
@@ -239,7 +298,10 @@
 		transform: translate(0%, 100%);
 		padding: 10px;
 	}
-	#dialogueBox.show {
+	#dialogueBox {
+		display: flex;
+		justify-content: flex-start;
+		width: 100%;
 		border-style: solid;
 		border-color: aliceblue;
 	}
