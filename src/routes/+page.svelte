@@ -3,6 +3,7 @@
 	import type { AudioLine } from '$lib/dialogue';
 	import { fade } from 'svelte/transition';
 	import { base } from '$app/paths';
+	import { onMount } from 'svelte';
 
 	function playClick() {
 		if (backgroundAudio != null && !backgroundPlaying) {
@@ -43,7 +44,9 @@
 			index = Math.floor(Math.random() * TRASHCAN_DIALOGUES.length);
 		}
 		lastTextChoice = index;
-		index = 0;
+		if (validTextIndexArg) {
+			index = Number(urlParams.get("textIndex"))
+		}
 		const entry = TRASHCAN_DIALOGUES[index];
 		if (typeof entry === 'string') {
 			totalVoiceDialogue = [entry];
@@ -93,7 +96,11 @@
 			return;
 		}
 		// Always play the multiline ending dialogue
-		const play = isMultiLine ? true : Math.random() <= voiceChance;
+		let chance = voiceChance
+		if (validChanceArg) {
+			chance = Number(urlParams.get("voiceChance"))
+		}
+		const play = isMultiLine ? true : Math.random() <= chance;
 		if (play) {
 			let index: number;
 			let dialogueObj: AudioLine;
@@ -113,6 +120,9 @@
 					index = Math.floor(Math.random() * VOICE_LINE_DIALOGUES.length);
 				}
 				lastVoicelineChoice = index;
+				if (validVoiceIndexArg) {
+					index = Number(urlParams.get("voiceIndex"))
+				}
 				dialogueObj = VOICE_LINE_DIALOGUES[index];
 			}
 			const voiceNode = document.getElementById('voicelines')!!.children[index] as HTMLAudioElement;
@@ -126,6 +136,11 @@
 			voiceNode.play();
 		}
 	}
+
+	let urlParams: URLSearchParams;
+	onMount(() => {
+		urlParams = new URLSearchParams(window.location.search)
+	})
 
 	let showVideo = true;
 	let backgroundPlaying = false;
@@ -150,6 +165,10 @@
 	let textDurationLimit = 2;
 	let dialogueDelay = 3; // If voiceline starts with e.g. laughing
 
+	let achieveEnterDuration = 500; // Milliseconds
+	let achieveDelayDuration = 600;
+	let achieveExitDuration = 1000;
+
 	let backgroundAudio: HTMLAudioElement;
 	let clickAudio: HTMLAudioElement;
 	let achieveAudio: HTMLAudioElement;
@@ -160,6 +179,9 @@
 	];
 	$: isMultiLine = totalVoiceDialogue.length > 1;
 	$: isLastEntry = currentTextIndex == totalVoiceDialogue.length - 1;
+	$: validChanceArg = urlParams != null && urlParams.has("voiceChance") && Number(urlParams.get("voiceChance")) >= 0 && Number(urlParams.get("voiceChance")) <= 1
+	$: validTextIndexArg = urlParams != null && urlParams.has("textIndex") && Number.isInteger(Number(urlParams.get("textIndex"))) && Number(urlParams.get("textIndex")) >= 0 && Number(urlParams.get("textIndex")) < TRASHCAN_DIALOGUES.length
+	$: validVoiceIndexArg = urlParams != null && urlParams.has("voiceIndex") && Number.isInteger(Number(urlParams.get("voiceIndex"))) && Number(urlParams.get("voiceIndex")) >= 0 && Number(urlParams.get("voiceIndex")) < VOICE_LINE_DIALOGUES.length
 </script>
 
 <div id="outer">
@@ -217,15 +239,15 @@
 				{/if}
 				{#if showAchievement}
 					<div
-						in:fade={{ duration: 500 }}
-						out:fade={{ delay: 1000, duration: 1000 }}
+						in:fade={{ duration: achieveEnterDuration }}
+						out:fade={{ delay: achieveDelayDuration, duration: achieveExitDuration }}
 						class="show"
-						id="dialogueBox"
+						id="achievementBox"
 					>
 						<img
 							on:introstart={() => achieveAudio.play()}
-							in:fade={{ duration: 500 }}
-							out:fade={{ delay: 1000, duration: 1000 }}
+							in:fade={{ duration: achieveEnterDuration }}
+							out:fade={{ delay: achieveDelayDuration, duration: achieveExitDuration }}
 							on:introend={() => {
 								showAchievement = false;
 							}}
@@ -235,8 +257,8 @@
 						/>
 						<div
 							id="dialogue"
-							in:fade={{ duration: 500 }}
-							out:fade={{ delay: 1000, duration: 1000 }}
+							in:fade={{ duration: achieveEnterDuration }}
+							out:fade={{ delay: achieveDelayDuration, duration: achieveExitDuration }}
 						>
 							Obtained 1x Praise of High morals
 						</div>
@@ -302,6 +324,14 @@
 		display: flex;
 		justify-content: flex-start;
 		width: 100%;
+		border-style: solid;
+		border-color: aliceblue;
+	}
+	#achievementBox {
+		display: flex;
+		justify-content: flex-start;
+		width: 100%;
+		border-radius: 25px;
 		border-style: solid;
 		border-color: aliceblue;
 	}
