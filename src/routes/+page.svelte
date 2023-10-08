@@ -288,8 +288,6 @@
 	}
 	#outer {
 		height: 100%;
-		/* display: flex; */
-		/* justify-content: center; */
 	}
 	#textblock {
 		display: flex;

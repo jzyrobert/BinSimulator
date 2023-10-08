@@ -71,7 +71,7 @@ export const VOICE_LINE_DIALOGUES: AudioLine[] = [
         icon: "march_angry.webp"
     },
     {
-        line: "You don't seem very excited.",
+        line: "You don't look very excited at the outcome.",
         audio: "pompom_excited",
         icon: "pompom_warning.webp"
     },
@@ -80,6 +80,11 @@ export const VOICE_LINE_DIALOGUES: AudioLine[] = [
         audio: "pompom_more",
         icon: "pompom.webp"
     },
+    {
+        line: "Are you searching in there for the secrets of the universe?",
+        audio: "welt_secrets",
+        icon: "welt.webp"
+    }
 ]
 
 export const ENDING_DIALOGUES: AudioLine[] = [
