@@ -31,6 +31,7 @@ export const SOUND_FILES = [
     "achieve",
     "click_fast",
     "Embers",
+    "Embers_quiet"
 ]
 
 export const VIDEO_FILES = [

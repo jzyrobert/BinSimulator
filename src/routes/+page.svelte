@@ -8,16 +8,26 @@
 
 	function playClick() {
 		if (backgroundAudio != null && !backgroundPlaying) {
-			backgroundAudio.volume = backgroundVolume;
-			if (validBackgroundVolumeArg) {
-				backgroundAudio.volume = parseFloat(urlParams.get('bgVolume')!!);
+			if (useLoudBackground) {
+				backgroundAudio.src = base + "/" + "Embers.mp3"
 			}
 			backgroundAudio.play();
 			backgroundPlaying = true;
+
+			// also trigger achievement audio once
+			// because IOS safari won't play it otherwise
+			// stupid ios
+			if (achieveAudio != null) {
+				playAchieve()
+			}
 		}
 		if (clickAudio != null) {
 			clickAudio.play();
 		}
+	}
+
+	function playAchieve() {
+		achieveAudio.play()
 	}
 
 	function typeWrite(node: HTMLElement) {
@@ -172,8 +182,8 @@
 		}
 	}
 
-	function isNumeric(n) {
-		return !isNaN(parseFloat(n)) && isFinite(n);
+	function isNumeric(n: string) {
+		return !isNaN(parseFloat(n)) && isFinite(parseFloat(n));
 	}
 
 	let urlParams: URLSearchParams;
@@ -246,15 +256,16 @@
 	$: validVoiceVolumeArg =
 		urlParams != null &&
 		urlParams.has('voiceVolume') &&
-		isNumeric(urlParams.get('voiceVolume')) &&
+		isNumeric(urlParams.get('voiceVolume')!!) &&
 		parseFloat(urlParams.get('voiceVolume')!!) >= 0 &&
 		parseFloat(urlParams.get('voiceVolume')!!) <= 1;
 	$: validBackgroundVolumeArg =
 		urlParams != null &&
 		urlParams.has('bgVolume') &&
-		isNumeric(urlParams.get('bgVolume')) &&
+		isNumeric(urlParams.get('bgVolume')!!) &&
 		parseFloat(urlParams.get('bgVolume')!!) >= 0 &&
 		parseFloat(urlParams.get('bgVolume')!!) <= 1;
+	$: useLoudBackground = urlParams != null && urlParams.has('loudBg')
 </script>
 
 <div id="outer">
@@ -320,7 +331,7 @@
 						id="achievementBox"
 					>
 						<img
-							on:introstart={() => achieveAudio.play()}
+							on:introstart={playAchieve}
 							in:fade={{ duration: achieveEnterDuration }}
 							out:fade={{ delay: achieveDelayDuration, duration: achieveExitDuration }}
 							on:introend={() => {
@@ -342,10 +353,10 @@
 			</div>
 		</div>
 	{/if}
-	<audio bind:this={backgroundAudio} id="ember" src="Embers.mp3" loop />
-	<audio bind:this={achieveAudio} id="achieve" src="achieve.mp3" />
-	<audio bind:this={clickAudio} id="click" src="click_fast.mp3" />
-	<div id="voicelines">
+	<audio preload="auto" bind:this={backgroundAudio} id="ember" src="Embers_quiet.mp3" loop />
+	<audio preload="auto" bind:this={achieveAudio} id="achieve" src="achieve.mp3" />
+	<audio preload="auto" bind:this={clickAudio} id="click" src="click_fast.mp3" />
+	<div id="voicelines">parseFloat(n)
 		{#each combinedVoiceLines as voiceLine}
 			<audio
 				on:play={() => (voicelinePlaying = true)}
@@ -402,7 +413,7 @@
 	}
 	#achievementBox {
 		display: flex;
-		justify-content: flex-start;
+		justify-content: center;
 		width: 100%;
 		border-radius: 25px;
 		border-style: solid;
@@ -421,6 +432,14 @@
 		display: flex;
 		align-content: center;
 		justify-content: center;
+		height: 100%;
+		scale: 80%;
+	}
+	#praise {
+		display: flex;
+		align-content: center;
+		justify-content: center;
+		height: 100%;
 		scale: 80%;
 	}
 	video {
