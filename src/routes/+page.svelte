@@ -303,19 +303,29 @@
 	{#if loadingFiles}
 		<div id="loadingFiles">Loading files...</div>
 	{:else if showVideo}
-		<video
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		<!-- svelte-ignore a11y-click-events-have-key-events -->
+		<div
 			in:fade
 			out:fade
 			on:click={() => {
 				playClick();
 				showText();
 			}}
-			autoplay
-			muted
-			controls={false}
-			loop
-			src="Background_2.mp4"
-		/>
+			id="videoContainer"
+		>
+			<div
+				class="videoFill"
+				id="fillLeft"
+				style="background-image: url({base}/images/bg_left.webp)"
+			/>
+			<div
+				class="videoFill"
+				id="fillRight"
+				style="background-image: url({base}/images/bg_right.webp)"
+			/>
+			<video autoplay muted playsinline loop src="Background_2.mp4" />
+		</div>
 	{:else}
 		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -484,13 +494,37 @@
 		height: 100%;
 		scale: 80%;
 	}
+	#videoContainer {
+		position: absolute;
+		inset: 0;
+		container-type: size;
+		background-color: #362d2d;
+	}
 	video {
+		position: relative;
 		display: block;
 		height: 100%;
 		width: 100%;
-		/* Show the whole 4:3 video and fill the spare space with its background colour */
+		/* Show the whole 4:3 video, the side fills extend its background on wider screens */
 		object-fit: contain;
-		background-color: #362d2d;
+	}
+	.videoFill {
+		position: absolute;
+		top: 0;
+		height: 100%;
+		/* Space either side of a 4:3 video at full height */
+		width: max(0px, 50cqw - 66.667cqh);
+		background-size: auto 100%;
+		background-repeat: repeat-x;
+	}
+	/* Tiles are mirrored strips of the video's edges, anchored at the video so the seam lines up */
+	#fillLeft {
+		left: 0;
+		background-position: right top;
+	}
+	#fillRight {
+		right: 0;
+		background-position: left top;
 	}
 	#loadingFiles {
 		height: 100%;
