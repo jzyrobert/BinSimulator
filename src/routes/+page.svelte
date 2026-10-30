@@ -182,6 +182,22 @@
 		}
 	}
 
+	function toggleFullscreen(e: Event) {
+		e.stopPropagation();
+		const el = document.documentElement as any;
+		const req = el.requestFullscreen ?? el.webkitRequestFullscreen;
+		if (req) {
+			Promise.resolve(req.call(el))
+				.then(() => (screen.orientation as any)?.lock?.('landscape'))
+				.catch(() => {});
+		}
+	}
+
+	function updateFullscreen() {
+		const doc = document as any;
+		isFullscreen = !!(doc.fullscreenElement ?? doc.webkitFullscreenElement);
+	}
+
 	function isNumeric(n: string) {
 		return !isNaN(parseFloat(n)) && isFinite(parseFloat(n));
 	}
@@ -189,6 +205,11 @@
 	let urlParams: URLSearchParams;
 	onMount(() => {
 		urlParams = new URLSearchParams(window.location.search);
+		const doc = document as any;
+		fullscreenSupported = !!(doc.fullscreenEnabled ?? doc.webkitFullscreenEnabled);
+		updateFullscreen();
+		document.addEventListener('fullscreenchange', updateFullscreen);
+		document.addEventListener('webkitfullscreenchange', updateFullscreen);
 		prefetchFiles();
 	});
 
@@ -204,6 +225,8 @@
 	let introRunning = false;
 	let showAchievement = false;
 	let loadingFiles = true;
+	let fullscreenSupported = false;
+	let isFullscreen = false;
 
 	let voiceDialogue = '';
 	let dialogueIcon = '';
@@ -269,6 +292,13 @@
 </script>
 
 <div id="outer">
+	{#if fullscreenSupported && !isFullscreen}
+		<button id="fullscreenButton" on:click={toggleFullscreen} aria-label="Enter fullscreen">
+			<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5">
+				<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+			</svg>
+		</button>
+	{/if}
 	<!-- svelte-ignore a11y-media-has-caption -->
 	{#if loadingFiles}
 		<div id="loadingFiles">Loading files...</div>
@@ -356,7 +386,7 @@
 	<audio preload="auto" bind:this={backgroundAudio} id="ember" src="Embers_quiet.mp3" loop />
 	<audio preload="auto" bind:this={achieveAudio} id="achieve" src="achieve.mp3" />
 	<audio preload="auto" bind:this={clickAudio} id="click" src="click_fast.mp3" />
-	<div id="voicelines">parseFloat(n)
+	<div id="voicelines">
 		{#each combinedVoiceLines as voiceLine}
 			<audio
 				on:play={() => (voicelinePlaying = true)}
@@ -368,12 +398,24 @@
 </div>
 
 <style>
-	@font-face {
-		font-family: din_bold;
-		src: url('/fonts/din_bold.otf');
-	}
 	#outer {
-		height: 100%;
+		position: fixed;
+		inset: 0;
+		overflow: hidden;
+		background-color: black;
+	}
+	#fullscreenButton {
+		position: absolute;
+		top: 12px;
+		right: 12px;
+		z-index: 10;
+		display: flex;
+		padding: 8px;
+		border: none;
+		border-radius: 8px;
+		color: white;
+		background-color: rgba(0, 0, 0, 0.45);
+		cursor: pointer;
 	}
 	#textblock {
 		display: flex;
@@ -443,15 +485,16 @@
 		scale: 80%;
 	}
 	video {
-		height: 120%;
-		width: 140%;
-		overflow: hidden;
-		transform: translate(-15%);
+		display: block;
+		height: 100%;
+		width: 100%;
+		object-fit: cover;
 	}
 	#loadingFiles {
 		height: 100%;
 		width: 100%;
 		font-size: 10vmin;
+		color: white;
 		display: flex;
 		align-items: center;
 		justify-content: center;
