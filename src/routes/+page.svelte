@@ -488,7 +488,9 @@
 		display: block;
 		height: 100%;
 		width: 100%;
-		object-fit: cover;
+		/* Show the whole 4:3 video and fill the spare space with its background colour */
+		object-fit: contain;
+		background-color: #362d2d;
 	}
 	#loadingFiles {
 		height: 100%;
